@@ -298,188 +298,160 @@ gsap.to('.service-card', {
   scrollTrigger: { trigger: '#services', start: 'top 75%' }
 });
 
-// Portfolio items (triggered individually after generation)
-function animatePortfolioItems() {
-  gsap.to('.portfolio-item', {
-    opacity: 1, scale: 1, duration: 0.6, stagger: 0.07, ease: 'power3.out',
-    scrollTrigger: { trigger: '#portfolio', start: 'top 70%' }
-  });
-}
-
 // Contact
 gsap.to('.contact-card', {
   opacity: 1, y: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out',
   scrollTrigger: { trigger: '#contact', start: 'top 75%' }
 });
 
-/* ===== PORTFOLIO DATA ===== */
-const portfolioItems = [
-  { title: 'Epic Gaming Thumbnail', cat: 'thumbnail', color: '#1a0030',  accent: '#7c3aed', emoji: '🎮', desc: 'High-energy gaming thumbnail with dramatic lighting and bold typography.' },
-  { title: 'Cyberpunk Poster',      cat: 'poster',    color: '#001a0d',  accent: '#00ff88', emoji: '🌆', desc: 'Futuristic cityscape poster with neon aesthetic and cinematic composition.' },
-  { title: 'AI Cosmic Art',         cat: 'ai',        color: '#000d1a',  accent: '#0ea5e9', emoji: '🌌', desc: 'AI-generated cosmic nebula art with extraordinary detail and depth.' },
-  { title: 'Brand Identity System', cat: 'branding',  color: '#1a0a00',  accent: '#f59e0b', emoji: '🏷️', desc: 'Complete brand system with logo, colors, and typography guidelines.' },
-  { title: 'Cinematic Reel Intro',  cat: 'cinematic', color: '#0a000d',  accent: '#a855f7', emoji: '🎬', desc: 'Smooth cinematic intro edit with motion blur and color grading.' },
-  { title: 'Tech Channel Banner',   cat: 'thumbnail', color: '#00101a',  accent: '#22d3ee', emoji: '📡', desc: 'Modern tech YouTube channel art with clean lines and dynamic feel.' },
-  { title: 'Neon Club Poster',      cat: 'poster',    color: '#1a0018',  accent: '#ec4899', emoji: '🎵', desc: 'Vibrant club night poster with neon typography and glitch effects.' },
-  { title: 'AI Portrait Series',    cat: 'ai',        color: '#0a0a00',  accent: '#eab308', emoji: '🤖', desc: 'Ultra-realistic AI portrait series exploring futuristic human aesthetics.' },
-  { title: 'Creator Brand Kit',     cat: 'branding',  color: '#001409',  accent: '#10b981', emoji: '✨', desc: 'Full content creator brand kit with templates, icons and guides.' },
-  { title: 'Sports Highlight Edit', cat: 'cinematic', color: '#1a0000',  accent: '#ef4444', emoji: '⚡', desc: 'High-intensity sports highlight reel with punchy cuts and energy effects.' },
-  { title: 'Horror Thumbnail',      cat: 'thumbnail', color: '#0d0000',  accent: '#dc2626', emoji: '👻', desc: 'Atmospheric horror thumbnail with dramatic shadows and color treatment.' },
-  { title: 'Minimalist Event Flyer',cat: 'poster',    color: '#080808',  accent: '#d1d5db', emoji: '🎪', desc: 'Clean minimalist event poster with refined layout and premium feel.' },
-];
+/* ===== GOOGLE DRIVE GALLERY ===== */
+(function initDriveGallery() {
+  const FOLDER_ID = '1kvbXwZgZ0rHE-WntZmGSV-CuSBbZ3TyN';
+  // ⚠️ IMPORTANT: Replace with your own Google Drive API key
+  // Steps to get API key:
+  // 1. Go to: https://console.cloud.google.com/
+  // 2. Create a new project or select existing one
+  // 3. Enable "Google Drive API"
+  // 4. Create an API key (Credentials → Create Credentials → API Key)
+  // 5. Restrict it to your domain for security
+  // 6. Also make sure your Google Drive folder (id: 1kvbXwZgZ0rHE-WntZmGSV-CuSBbZ3TyN) is SHARED PUBLICLY
+  const API_KEY   = 'YOUR_GOOGLE_DRIVE_API_KEY';
 
-// Image files from folders (auto-generated list)
-const thumbnailFiles = [
-  'AI thum vlog 2.jpeg',
-  'ai thum vlog.jpeg',
-  'muisc thum 4.jpeg',
-  'music thum 2.jpeg',
-  'music thum 3.jpeg',
-  'music thum.jpeg',
-  'without AI thum 2.jpeg',
-  'without AI thum.jpeg'
-];
-const posterFiles = [
-  'ai poster.png',
-  'no ai poster.png'
-];
+  const API_URL   = 'https://www.googleapis.com/drive/v3/files'
+    + '?q=' + encodeURIComponent("'" + FOLDER_ID + "' in parents and mimeType contains 'image/' and trashed=false")
+    + '&fields=' + encodeURIComponent('files(id,name,mimeType,thumbnailLink)')
+    + '&pageSize=100'
+    + '&orderBy=name'
+    + '&key=' + API_KEY;
 
-/* ===== RENDER PORTFOLIO ===== */
-const grid = document.getElementById('portfolioGrid');
-// Render existing items, replacing emoji with images for thumbnails/posters when available
-let tIdx = 0, pIdx = 0;
-portfolioItems.forEach((item) => {
-  const div = document.createElement('div');
-  div.className = 'portfolio-item';
-  div.dataset.cat = item.cat;
-
-  let mediaHTML = `<span style="font-size:clamp(2rem,5vw,4rem);opacity:0.5;">${item.emoji || ''}</span>`;
-  if (item.cat === 'thumbnail' && tIdx < thumbnailFiles.length) {
-    const src = `thumbnails/${thumbnailFiles[tIdx++]}`;
-    mediaHTML = `<img src="${src}" alt="${item.title}" style="max-width:100%;height:auto;object-fit:cover;width:100%;height:100%;">`;
-    item._img = src;
-  } else if (item.cat === 'poster' && pIdx < posterFiles.length) {
-    const src = `posters/${posterFiles[pIdx++]}`;
-    mediaHTML = `<img src="${src}" alt="${item.title}" style="max-width:100%;height:auto;object-fit:cover;width:100%;height:100%;">`;
-    item._img = src;
+  /* -- Auto-detect category from filename keywords -- */
+  function detectCat(name) {
+    const n = name.toLowerCase();
+    if (n.includes('thumbnail') || n.includes('thum')) return 'thumbnail';
+    if (n.includes('poster'))                           return 'poster';
+    if (n.includes('branding') || n.includes('brand')) return 'branding';
+    if (n.includes('ai'))                               return 'ai';
+    if (n.includes('cinematic') || n.includes('cine')) return 'cinematic';
+    return 'design';
   }
 
-  div.innerHTML = `
-    <div class="pi-bg" style="background: linear-gradient(135deg, ${item.color} 0%, ${item.accent}22 100%); display:flex;align-items:center;justify-content:center;overflow:hidden;">
-      ${mediaHTML}
-    </div>
-    <div class="pi-overlay">
-      <p class="pi-cat">${item.cat}</p>
-      <p class="pi-title">${item.title}</p>
-    </div>
-    <div class="pi-expand">+</div>
-  `;
-  div.addEventListener('click', () => openModal(item));
-  grid.appendChild(div);
-});
+  /* -- Clean filename → display title -- */
+  function prettyTitle(name) {
+    return name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+  }
 
-// Add any remaining thumbnail images as their own portfolio items
-for (; tIdx < thumbnailFiles.length; tIdx++) {
-  const filename = thumbnailFiles[tIdx];
-  const item = { title: filename.replace(/\.[^.]+$/, ''), cat: 'thumbnail', color: '#000000', accent: '#222222', desc: '', _img: `thumbnails/${filename}` };
-  const div = document.createElement('div');
-  div.className = 'portfolio-item';
-  div.dataset.cat = item.cat;
-  div.innerHTML = `
-    <div class="pi-bg" style="background: linear-gradient(135deg, ${item.color} 0%, ${item.accent}22 100%); display:flex;align-items:center;justify-content:center;overflow:hidden;">
-      <img src="${item._img}" alt="${item.title}" style="max-width:100%;height:auto;object-fit:cover;width:100%;height:100%;">
-    </div>
-    <div class="pi-overlay">
-      <p class="pi-cat">${item.cat}</p>
-      <p class="pi-title">${item.title}</p>
-    </div>
-    <div class="pi-expand">+</div>
-  `;
-  div.addEventListener('click', () => openModal(item));
-  grid.appendChild(div);
-}
+  /* -- Google image CDN URLs (public files, no auth needed) -- */
+  function thumbURL(id) { return 'https://lh3.googleusercontent.com/d/' + id + '=s800'; }
+  function fullURL(id)  { return 'https://lh3.googleusercontent.com/d/' + id + '=s1600'; }
 
-// Add any remaining poster images as their own portfolio items
-for (; pIdx < posterFiles.length; pIdx++) {
-  const filename = posterFiles[pIdx];
-  const item = { title: filename.replace(/\.[^.]+$/, ''), cat: 'poster', color: '#000000', accent: '#222222', desc: '', _img: `posters/${filename}` };
-  const div = document.createElement('div');
-  div.className = 'portfolio-item';
-  div.dataset.cat = item.cat;
-  div.innerHTML = `
-    <div class="pi-bg" style="background: linear-gradient(135deg, ${item.color} 0%, ${item.accent}22 100%); display:flex;align-items:center;justify-content:center;overflow:hidden;">
-      <img src="${item._img}" alt="${item.title}" style="max-width:100%;height:auto;object-fit:cover;width:100%;height:100%;">
-    </div>
-    <div class="pi-overlay">
-      <p class="pi-cat">${item.cat}</p>
-      <p class="pi-title">${item.title}</p>
-    </div>
-    <div class="pi-expand">+</div>
-  `;
-  div.addEventListener('click', () => openModal(item));
-  grid.appendChild(div);
-}
-animatePortfolioItems();
+  const grid = document.getElementById('portfolioGrid');
 
-/* ===== PORTFOLIO FILTER ===== */
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    const f = this.dataset.filter;
-    document.querySelectorAll('.portfolio-item').forEach(item => {
-      const show = f === 'all' || item.dataset.cat === f;
-      if (show) {
-        item.classList.remove('hidden-item');
-        gsap.fromTo(item, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' });
+  /* -- Skeleton placeholders while loading -- */
+  function showSkeletons(count) {
+    grid.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const sk = document.createElement('div');
+      sk.className = 'portfolio-item pi-skeleton';
+      sk.style.cssText = 'opacity:1;transform:none;';
+      grid.appendChild(sk);
+    }
+  }
+
+  /* -- Build one portfolio card -- */
+  function buildCard(file) {
+    const cat   = detectCat(file.name);
+    const title = prettyTitle(file.name);
+    const id    = file.id;
+
+    const div = document.createElement('div');
+    div.className   = 'portfolio-item';
+    div.dataset.cat = cat;
+    div.style.cssText = 'opacity:0;transform:scale(0.92);';
+
+    div.innerHTML =
+      '<div class="pi-bg" style="background:#0d0d0d;display:flex;align-items:center;justify-content:center;overflow:hidden;">'
+      + '<img class="pi-img-fade" src="' + thumbURL(id) + '" data-full="' + fullURL(id) + '" alt="' + title + '" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;" />'
+      + '</div>'
+      + '<div class="pi-overlay">'
+      + '<p class="pi-cat">' + cat + '</p>'
+      + '<p class="pi-title">' + title + '</p>'
+      + '</div>'
+      + '<div class="pi-expand">+</div>';
+
+    /* Fade image in once loaded */
+    const img = div.querySelector('img');
+    img.addEventListener('load', function() { img.classList.add('loaded'); });
+    img.addEventListener('error', function() {
+      if (file.thumbnailLink && img.src !== file.thumbnailLink) {
+        img.src = file.thumbnailLink;
       } else {
-        gsap.to(item, { opacity: 0, scale: 0.9, duration: 0.25, ease: 'power2.in',
-          onComplete: () => item.classList.add('hidden-item') });
+        img.style.display = 'none';
       }
     });
-  });
-});
 
-/* ===== MODAL ===== */
-function openModal(item) {
-  const modal = document.getElementById('portfolio-modal');
-  const card  = document.getElementById('modalCard');
-  const content = document.getElementById('modalContent');
+    /* Open modal with full-size image */
+    div.addEventListener('click', function() {
+      openModal({ emoji: '🖼️', cat: cat, title: title, desc: '', _img: fullURL(id) });
+    });
 
-  content.innerHTML = `
-    <div style="font-size:4rem;margin-bottom:16px;">${item.emoji}</div>
-    <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--neon);margin-bottom:8px;">${item.cat}</p>
-    <h3 style="font-family:var(--font-display);font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">${item.title}</h3>
-    <p style="font-family:var(--font-body);color:rgba(255,255,255,0.5);font-size:14px;line-height:1.7;">${item.desc}</p>
-    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,136,0.3),transparent);margin:20px 0;"></div>
-    <p style="font-family:var(--font-mono);font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:0.2em;">NIRBHAY · CREATIVE DESIGN</p>
-  `;
+    return div;
+  }
 
-  modal.classList.add('open');
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  lenis.stop();
+  /* -- Error / empty state -- */
+  function showMessage(icon, line1, line2) {
+    grid.innerHTML =
+      '<div class="portfolio-error">'
+      + '<span style="font-size:2.5rem;margin-bottom:14px;">' + icon + '</span>'
+      + '<span>' + line1 + '</span>'
+      + (line2 ? '<span style="margin-top:8px;color:rgba(0,255,136,0.5);">' + line2 + '</span>' : '')
+      + '</div>';
+  }
 
-  gsap.to(card, { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.5)' });
-}
+  /* -- Fetch from Drive API -- */
+  async function loadGallery() {
+    showSkeletons(8);
+    let files = [];
 
-function closeModal() {
-  const modal = document.getElementById('portfolio-modal');
-  const card  = document.getElementById('modalCard');
-  gsap.to(card, {
-    opacity: 0, scale: 0.9, duration: 0.3, ease: 'power2.in',
-    onComplete: () => {
-      modal.style.display = 'none';
-      modal.classList.remove('open');
-      document.body.style.overflow = '';
-      lenis.start();
+    try {
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error('Drive API responded with ' + res.status);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      files = data.files || [];
+    } catch (err) {
+      console.warn('[Drive Gallery] Fetch failed:', err.message);
+      showMessage(
+        '📁',
+        'Could not load gallery from Google Drive.',
+        'Make sure the folder is shared publicly and your API key is set in script.js'
+      );
+      return;
     }
-  });
-}
 
-document.getElementById('modalClose').addEventListener('click', closeModal);
-document.getElementById('modalBg').addEventListener('click', closeModal);
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    grid.innerHTML = '';
+
+    if (!files.length) {
+      showMessage('📂', 'No images found in the Drive folder yet.', 'Add images and they will appear here automatically.');
+      return;
+    }
+
+    files.forEach(function(file) { grid.appendChild(buildCard(file)); });
+
+    /* Re-attach cursor hover for dynamically created cards */
+    document.querySelectorAll('.portfolio-item').forEach(function(el) {
+      el.addEventListener('mouseenter', function() { cursor.classList.add('hovered'); });
+      el.addEventListener('mouseleave', function() { cursor.classList.remove('hovered'); });
+    });
+
+    animatePortfolioItems();
+  }
+
+  loadGallery();
+})();
+
+/* ===== PORTFOLIO FILTER REMOVED ===== */
+
+/* ===== MODAL REMOVED ===== */
 
 /* ===== COPY EMAIL BUTTON ===== */
 document.getElementById('copyEmail').addEventListener('click', function() {
