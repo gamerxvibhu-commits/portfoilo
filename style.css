@@ -451,3 +451,65 @@ body::before {
 /* ===== GSAP SCROLL REVEAL UTILITY ===== */
 .reveal { opacity: 0; transform: translateY(40px); }
 .reveal.in-view { opacity: 1; transform: translateY(0); }
+
+/* ===== ACCESS WORK BOX ===== */
+.access-work-box {
+  border: 2px solid rgba(0,255,136,0.2);
+  cursor: pointer;
+  transition: all 0.4s ease;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: inherit;
+}
+.access-work-box:hover {
+  border-color: rgba(0,255,136,0.6);
+  box-shadow: 0 0 40px rgba(0,255,136,0.15), inset 0 0 40px rgba(0,255,136,0.05);
+  background: rgba(0,255,136,0.06);
+  transform: translateY(-5px);
+}
+.access-work-box:hover h3 {
+  color: var(--neon);
+  text-shadow: 0 0 20px rgba(0,255,136,0.3);
+}
+
+/* ===== GOOGLE DRIVE GALLERY — ADDITIONS ===== */
+
+/* Skeleton shimmer placeholder */
+.pi-skeleton {
+  background: linear-gradient(90deg, #111 25%, #1c1c1c 50%, #111 75%);
+  background-size: 200% 100%;
+  animation: skelShimmer 1.6s ease-in-out infinite;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+@keyframes skelShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Image fade-in on load */
+.pi-img-fade {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.pi-img-fade.loaded {
+  opacity: 1;
+}
+
+/* Error / empty state */
+.portfolio-error {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: rgba(255,255,255,0.2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-align: center;
+  gap: 4px;
+}
